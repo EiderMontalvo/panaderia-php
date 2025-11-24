@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # Servicio de Base de Datos
   db:
     image: mysql:8.0
     container_name: panaderia_db
@@ -11,15 +12,66 @@ services:
       - "3307:3306"
     volumes:
       - panaderia_venta_data:/var/lib/mysql
+    networks:
+      - panaderia_network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Servicio de PHP con Apache
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: panaderia_web
+    environment:
+      # Variables de Base de Datos
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: panaderia_venta
+      DB_USER: root
+      DB_PASS: root
+      # Variables de Aplicación
+      APP_ENV: development
+      APP_DEBUG: "true"
+      APP_TIMEZONE: America/Lima
+    ports:
+      - "8080:80"
+    volumes:
+      - ./www:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - panaderia_network
+    restart: unless-stopped
+
+  # PHPMyAdmin (solo para desarrollo)
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: panaderia_phpmyadmin
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
     ports:
       - "8888:80"
+    depends_on:
+      - db
+    networks:
+      - panaderia_network
+    restart: unless-stopped
 
+# Red interna para comunicación entre contenedores
+networks:
+  panaderia_network:
+    driver: bridge
+
+# Volumen persistente para la base de datos
 volumes:
   panaderia_venta_data:
+    driver: local
