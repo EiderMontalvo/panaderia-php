@@ -9,3 +9,10 @@ src/config/database.php
 *.tmp
 *.swp
 *~
+.DS_Store
+Thumbs.db
+
+#archivos de prueba
+*test*.php
+*demo*.php
+*prueba*.php
