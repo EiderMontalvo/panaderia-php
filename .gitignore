@@ -1,0 +1,11 @@
+#archivos de configuración
+src/config/database.php
+.env
+
+#logs
+*.log
+
+#archivos temporales
+*.tmp
+*.swp
+*~
